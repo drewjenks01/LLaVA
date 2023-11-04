@@ -110,7 +110,7 @@ class LlavaMetaForCausalLM(ABC):
             image_features = self.encode_images(concat_images)
             split_sizes = [image.shape[0] for image in images]
             image_features = torch.split(image_features, split_sizes, dim=0)
-            image_features = [x.flatten(0, 1) for x in image_features]
+            image_features = [x.flatten(0, 1).to(concat_images.device) for x in image_features]
         else:
             image_features = self.encode_images(images)
 
@@ -148,7 +148,7 @@ class LlavaMetaForCausalLM(ABC):
                     if labels is not None:
                         cur_new_labels.append(cur_labels[:image_token_start])
                         cur_new_labels.append(torch.full((cur_image_features.shape[0],), IGNORE_INDEX, device=labels.device, dtype=labels.dtype))
-                        cur_new_labels.append(cur_labels[image_token_start:image_token_start+1])
+                        cur_new_labels.append(cur_labels[image_token_start+1:image_token_start+2])
                         cur_labels = cur_labels[image_token_start+2:]
                 else:
                     cur_new_input_embeds.append(self.get_model().embed_tokens(cur_input_ids[:image_token_start]))

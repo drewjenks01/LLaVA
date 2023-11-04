@@ -4,7 +4,7 @@
 
 [[Project Page](https://llava-vl.github.io/)] [[Demo](https://llava.hliu.cc/)]  [[Data](https://github.com/haotian-liu/LLaVA/blob/main/docs/Data.md)] [[Model Zoo](https://github.com/haotian-liu/LLaVA/blob/main/docs/MODEL_ZOO.md)]
 
-🤝Community Contributions: [[llama.cpp](https://github.com/ggerganov/llama.cpp/pull/3436)] [[Colab](https://github.com/camenduru/LLaVA-colab)] [[🤗Space](https://huggingface.co/spaces/badayvedat/LLaVA)]
+🤝Community Contributions: [[llama.cpp](https://github.com/ggerganov/llama.cpp/pull/3436)] [[Colab](https://github.com/camenduru/LLaVA-colab)] [[🤗Space](https://huggingface.co/spaces/badayvedat/LLaVA)] [[Roboflow Deep Dive](https://blog.roboflow.com/first-impressions-with-llava-1-5/)] [[Replicate](https://replicate.com/yorickvp/llava-13b)]
 
 **Improved Baselines with Visual Instruction Tuning** [[Paper](https://arxiv.org/abs/2310.03744)] <br>
 [Haotian Liu](https://hliu.cc), [Chunyuan Li](https://chunyuan.li/), [Yuheng Li](https://yuheng-li.github.io/), [Yong Jae Lee](https://pages.cs.wisc.edu/~yongjaelee/)
@@ -87,6 +87,53 @@ pip install flash-attn --no-build-isolation
 git pull
 pip install -e .
 ```
+
+### Quick Start With HuggingFace
+
+<details>
+<summary>Example Code</summary>
+
+```Python
+from llava.model.builder import load_pretrained_model
+from llava.mm_utils import get_model_name_from_path
+
+model_path = "liuhaotian/llava-v1.5-7b"
+model_name = get_model_name_from_path(model_path)
+model_base = None
+
+tokenizer, model, image_processor, context_len = load_pretrained_model(
+    model_path=model_path,
+    model_base=model_base,
+    model_name=model_name
+)
+```
+
+Check out the details wth the `load_pretrained_model` function in `llava/model/builder.py`.
+
+You can also use the `eval_model` function in `llava/eval/run_llava.py` to get the output easily. By doing so, you can use this code on Colab directly after downloading this repository.
+
+``` python
+# import the file
+
+model_path = "liuhaotian/llava-v1.5-7b"
+model_name = get_model_name_from_path(model_path)
+model_base = None
+prompt = "Give me a short description of this image."
+imageFile = "https://llava-vl.github.io/static/images/view.jpg"
+
+args = type('Args', (), {
+    "model_path": model_path,
+    "model_base": model_base,
+    "model_name": model_name,
+    "query": prompt,
+    "conv_mode": None,
+    "image_file": imageFile
+})()
+
+output = eval_model(args)
+print(output)
+```
+</details>
 
 ## LLaVA Weights
 Please check out our [Model Zoo](https://github.com/haotian-liu/LLaVA/blob/main/docs/MODEL_ZOO.md) for all public LLaVA checkpoints, and the instructions of how to use the weights.
@@ -229,6 +276,14 @@ Training script with DeepSpeed ZeRO-2: [`pretrain.sh`](https://github.com/haotia
 
 - `--mm_projector_type mlp2x_gelu`: the two-layer MLP vision-language connector.
 - `--vision_tower openai/clip-vit-large-patch14-336`: CLIP ViT-L/14 336px.
+
+<details>
+<summary>Pretrain takes around 20 hours for LLaVA-7B on 8x V100 (32G)</summary>
+
+ We provide training script with DeepSpeed [here](https://github.com/haotian-liu/LLaVA/blob/main/scripts/pretrain_xformers.sh).
+Tips:
+- If you are using V100 which is not supported by FlashAttention, you can use the [memory-efficient attention](https://arxiv.org/abs/2112.05682) implemented in [xFormers](https://github.com/facebookresearch/xformers). Install xformers and replace `llava/train/train_mem.py` above with [llava/train/train_xformers.py](llava/train/train_xformers.py).
+</details>
 
 ### Visual Instruction Tuning
 
